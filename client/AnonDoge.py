@@ -1,6 +1,6 @@
 import requests
 
-import Crypt
+import Crypt, DB
 
 from base64 import b64encode, b64decode
 
@@ -11,9 +11,9 @@ class AnonDoge:
     def __init__(self):
 
         try:
-            self.pubkey = open('.keys/pubkey', 'r').read().decode('utf8')
+            self.pubkey = open('.keys/pubkey', 'r').read().decode('utf-8')
             self.hashed_pubkey = Crypt.sha256(pubkey)
-            self.privkey = open('.keys/privkey', 'r').read().decode('utf8')
+            self.privkey = open('.keys/privkey', 'r').read().decode('utf-8')
         except:
             self.pubkey, self.privkey = Crypt.generate_RSA()
             Crypt.write_RSA(self.pubkey, self.privkey)
@@ -27,6 +27,9 @@ class AnonDoge:
 
         return r.json()
 
+        # new keys instead of that two
+        DB.save('hola', receiver, None, self.pubkey, self.privkey)
+
     def fetch(self):
 
         r = requests.get(AnonDoge.server + '/api/msgs', params = { 'hashed_pubkey': self.hashed_pubkey }, verify=False)
@@ -38,6 +41,8 @@ class AnonDoge:
         # download them in received (threads?)
         for msg in msgs:
             msg, newpubkey = Crypt.decrypt(self.privkey, msg)
-            print(msg)
 
-        return newpubkey
+            DB.save('hola', newpubkey, msg, self.pubkey, self.privkey)
+
+
+        print(DB.list())

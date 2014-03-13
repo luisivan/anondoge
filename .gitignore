@@ -1,3 +1,4 @@
 client/.keys
+client/.db
 msg.txt
 __pycache__

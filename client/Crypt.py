@@ -97,6 +97,7 @@ def encrypt(pubkey, privkey, receiver_pubkey, msg):
         'signature': signature
     }
 
+    # TODO: change to newkeys
     write_RSA(pubkey, privkey)
 
     return data

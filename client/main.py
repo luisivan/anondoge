@@ -15,7 +15,7 @@ class AnonDogeShell(Cmd):
 
         print(doge.fetch())
 
-    def do_read(self, arg):
+    def do_list(self, arg):
 
         print(doge.fetch())
 
