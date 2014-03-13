@@ -1,4 +1,3 @@
-pubkey
-privkey
+client/.keys
 msg.txt
 __pycache__
