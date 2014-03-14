@@ -1,4 +1,5 @@
-client/.keys
-client/.db
+client/.pubkey
+client/.privkey
+client/.receiver
 msg.txt
 __pycache__

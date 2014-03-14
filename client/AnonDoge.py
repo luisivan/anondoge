@@ -1,6 +1,6 @@
 import requests
 
-import Crypt, DB
+import Crypt
 
 from base64 import b64encode, b64decode
 
@@ -9,26 +9,59 @@ class AnonDoge:
     server = 'https://localhost:8443'
 
     def __init__(self):
-
         try:
-            self.pubkey = open('.keys/pubkey', 'r').read().decode('utf-8')
-            self.hashed_pubkey = Crypt.sha256(pubkey)
-            self.privkey = open('.keys/privkey', 'r').read().decode('utf-8')
-        except:
+            self.pubkey = open('.pubkey', 'r').read().encode()
+            self.hashed_pubkey = Crypt.sha256(self.pubkey)
+            self.privkey = open('.privkey', 'r').read().encode()
+        except IOError:
             self.pubkey, self.privkey = Crypt.generate_RSA()
             Crypt.write_RSA(self.pubkey, self.privkey)
             self.hashed_pubkey = Crypt.sha256(self.pubkey)
 
-    def send(self, receiver, msg):
+    def get_receiver(self):
 
-        data = Crypt.encrypt(self.pubkey, self.privkey, receiver, msg)
+        return open('.receiver', 'r').read()
+
+    def set_receiver(self, pubkey):
+
+        f = open('.receiver', 'w')
+        f.write(pubkey)
+        f.close()
+
+    def save_msg(self, msg):
+
+        f = open('received.txt', 'w')
+        f.write(msg)
+        f.close()
+
+    def get_alias(self):
+
+        r = requests.post(AnonDoge.server + '/api/alias', data= { 'pubkey': self.pubkey }, verify=False)
+
+        alias = r.json()['alias']
+
+        return alias
+
+    def get_pubkey(self, alias):
+
+        r = requests.get(AnonDoge.server + '/api/alias', params = { 'alias': alias }, verify=False)
+
+        pubkey = r.json()['pubkey']
+
+        return pubkey
+
+    def send(self, msg, is_file=False):
+
+        data, newpubkey, newprivkey = Crypt.encrypt(self.pubkey, self.privkey, self.get_receiver(), msg, is_file)
 
         r = requests.post(AnonDoge.server + '/api/msgs', data=data, verify=False)
 
-        return r.json()
+        Crypt.write_RSA(newpubkey, newprivkey)
+        self.pubkey = newpubkey
+        self.hashed_pubkey = Crypt.sha256(newpubkey)
+        self.privkey = newprivkey
 
-        # new keys instead of that two
-        DB.save('hola', receiver, None, self.pubkey, self.privkey)
+        return r.json()
 
     def fetch(self):
 
@@ -36,13 +69,20 @@ class AnonDoge:
 
         msgs = r.json()['msgs']
 
-        print('You have %d new messages' % (len(msgs)))
-
-        # download them in received (threads?)
+        arr = list()
         for msg in msgs:
+            #try:
             msg, newpubkey = Crypt.decrypt(self.privkey, msg)
+            arr.append(msg)
+            # todo: dont overwrite (in same session)
+            #self.save_msg(msg)
+            self.set_receiver(newpubkey)
 
-            DB.save('hola', newpubkey, msg, self.pubkey, self.privkey)
+            #except:
+            #    return 'Incorrect decryption'
 
+        return arr
 
-        print(DB.list())
+            
+
+            

@@ -11,30 +11,63 @@ class AnonDogeShell(Cmd):
     intro = 'Welcome to AnonDoge. Type help or ? to list commands\n'
     prompt = '(doge) '
 
+    def do_alias(self, arg):
+
+        args = parse(arg)
+        if len(args):
+            alias = args[0]
+            pubkey = doge.get_pubkey(alias)
+            if pubkey:
+                doge.set_receiver(pubkey)
+                print('Now you can message %s' % alias)
+            else:
+                print('Alias %s does not exist' % alias)
+        else:
+            print('Your alias is %s' % doge.get_alias())
+
     def do_key(self, arg):
 
         print(doge.pubkey.decode())
 
     def do_fetch(self, arg):
 
-        print(doge.fetch())
+        msgs = doge.fetch()
+        n = len(msgs)
 
-    def do_list(self, arg):
+        print("%d new message%s" % (n, "s"[n==1:]))
 
-        print(doge.fetch())
+        for i, msg in enumerate(msgs):
+
+            file_divider = b'-----BEGIN FILE-----'
+
+            if not file_divider in msg:
+                print('#%d - %s' % (i+1, msg))
+            else:
+                msg = msg[msg.index(file_divider)+20:]
+
+                f = open('blob', 'wb')
+                f.write(msg)
+                f.close()
 
     def do_send(self, arg):
 
-        receiver = open('.receiver', 'r').read()
+        args = parse(arg)
+        if len(args):
+            msg = args[0]
+        else:
+            msg = 'Received.'
 
-        string = parse(arg)[0]
-        print(string)
-        if string:
-            msg = string
+        if doge.send(msg.encode()):
+            print('Message sent')
 
-        print(doge.send(receiver, msg))
+    def do_sendfile(self, arg):
 
-        # move msg to sent as {timestamp}.txt
+        args = parse(arg)
+        f = args[0]
+        msg = open(f, 'rb').read()
+
+        if doge.send(msg, True):
+            print('File sent')
 
     def do_bye(self, arg):
         'Close AnonDoge'

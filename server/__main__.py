@@ -1,5 +1,6 @@
 import cherrypy
 from bson.json_util import dumps
+import names
 
 import db
 
@@ -9,6 +10,20 @@ class Home:
     def GET(self):
 
         return {'you': 'modafoca'}
+
+class Alias:
+
+    @cherrypy.tools.json_out()
+    def GET(self, alias):
+
+        pubkey = db.get_alias(alias)
+
+        return {'pubkey': pubkey}
+
+    @cherrypy.tools.json_out()
+    def POST(self, pubkey):
+
+        return {'alias': available_alias(pubkey)}
 
 class Msgs:
 
@@ -35,10 +50,19 @@ def expose(routes):
             theclass, path, {'/': {'request.dispatch': cherrypy.dispatch.MethodDispatcher()} }
         )
 
+def available_alias(pubkey):
+
+    name = names.get_first_name().lower()
+    if db.save_alias(name, pubkey):
+        return name
+    else:
+        return available_alias(pubkey)
+
 if __name__ == '__main__':
 
     routes = {
         '/': Home(),
+        '/api/alias': Alias(),
         '/api/msgs': Msgs()
     }
     expose(routes)

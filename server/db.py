@@ -5,6 +5,24 @@ client = MongoClient('mongodb://doge:doge@oceanic.mongohq.com:10033/AnonDoge')
 db = client['AnonDoge']
 
 msgs = db.msgs
+aliases = db.aliases
+
+def get_alias(alias):
+
+	pubkey = aliases.find_one({"alias": alias})
+	if pubkey:
+		aliases.remove({"alias": alias})
+		return pubkey['pubkey']
+	else:
+		return False
+
+def save_alias(alias, pubkey):
+
+	if aliases.find({"alias": alias}).count() is 0:
+		aliases.insert({'alias': alias, 'pubkey': pubkey})
+		return True
+	else:
+		return False
 
 def post(hashed_public_key, encrypted_key, encrypted_msg, signature):
 

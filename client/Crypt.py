@@ -12,11 +12,11 @@ def generate_RSA(bits=2048):
     return public_key, private_key
 
 def write_RSA(pubkey, privkey):
-    fpubkey = open('.keys/pubkey', 'wb')
+    fpubkey = open('.pubkey', 'wb')
     fpubkey.write(pubkey)
     fpubkey.close()
 
-    fprivkey = open('.keys/privkey', 'wb')
+    fprivkey = open('.privkey', 'wb')
     fprivkey.write(privkey)
     fprivkey.close()
 
@@ -77,16 +77,19 @@ def sha256(data):
     h.update(data)
     return h.hexdigest()
 
-def encrypt(pubkey, privkey, receiver_pubkey, msg):
+def encrypt(pubkey, privkey, receiver_pubkey, msg, is_file):
 
     newkeys = generate_RSA()
     
     newpubkey = newkeys[0]
-    msg = msg.encode()
     msg += pubkey + newpubkey
+
+    if is_file:
+        msg = b'-----BEGIN FILE-----' + msg
 
     encrypted_msg, key = encrypt_AES(msg)
     encrypted_key = encrypt_RSA(receiver_pubkey, key)
+
     signature = sign_data(privkey, encrypted_key)
 
     receiver = sha256(receiver_pubkey.encode())
@@ -97,10 +100,7 @@ def encrypt(pubkey, privkey, receiver_pubkey, msg):
         'signature': signature
     }
 
-    # TODO: change to newkeys
-    write_RSA(pubkey, privkey)
-
-    return data
+    return data, newpubkey, newkeys[1]
 
 def decrypt(privkey, data):
 
@@ -113,14 +113,18 @@ def decrypt(privkey, data):
 
     divider = '-----BEGIN PUBLIC KEY-----'
 
-    msg, oldpubkey, pubkey = str(decrypted_msg).split(divider)
+    #msg, oldpubkey, pubkey = decrypted_msg.decode().split(divider)
+    ocurrence = decrypted_msg.index(divider.encode())
+    msg = decrypted_msg[0:ocurrence]
 
-    oldpubkey = (divider + oldpubkey).encode('utf_8').decode('unicode_escape')
-    pubkey = (divider + pubkey).encode('utf_8').decode('unicode_escape')
+    oldpubkey, pubkey = decrypted_msg[ocurrence:].decode().split(divider)[1:3]
+
+    oldpubkey = divider + oldpubkey
+    pubkey = divider + pubkey
 
     isverified = verify_sign(oldpubkey, signature, encrypted_key)
 
     if isverified:
         return msg, pubkey
     else:
-        return False
+        return None, None
