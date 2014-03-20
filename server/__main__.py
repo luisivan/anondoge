@@ -1,5 +1,7 @@
 import cherrypy
-from bson.json_util import dumps
+from ws4py.server.cherrypyserver import WebSocketPlugin, WebSocketTool
+from ws4py.websocket import WebSocket
+
 import names
 
 import db
@@ -41,14 +43,18 @@ class Msgs:
 
         return {'id': str(msg_id)}
 
-def expose(routes):
+class WSocket(WebSocket):
 
-    for (path, theclass) in routes.items():
+    def received_message(self, message):
+        self.send(message.data, message.is_binary)
 
-        theclass.exposed = True
-        cherrypy.tree.mount(
-            theclass, path, {'/': {'request.dispatch': cherrypy.dispatch.MethodDispatcher()} }
-        )
+class Socket(object):
+
+    @cherrypy.expose
+    def ws(self):
+        '''handler = cherrypy.request.ws_handler
+        print(handler)'''
+        pass
 
 def available_alias(pubkey):
 
@@ -58,14 +64,16 @@ def available_alias(pubkey):
     else:
         return available_alias(pubkey)
 
-if __name__ == '__main__':
+def expose(routes):
 
-    routes = {
-        '/': Home(),
-        '/api/alias': Alias(),
-        '/api/msgs': Msgs()
-    }
-    expose(routes)
+    for (path, theclass) in routes.items():
+
+        theclass.exposed = True
+        cherrypy.tree.mount(
+            theclass, path, {'/': {'request.dispatch': cherrypy.dispatch.MethodDispatcher()} }
+        )
+
+if __name__ == '__main__':
 
     server_config = {
         'server.socket_host': '127.0.0.1',
@@ -76,5 +84,16 @@ if __name__ == '__main__':
         'server.ssl_private_key': 'certs/privkey.pem'
     }
     cherrypy.config.update(server_config)
+    WebSocketPlugin(cherrypy.engine).subscribe()
+    cherrypy.tools.websocket = WebSocketTool()
+
+    routes = {
+        '/': Home(),
+        '/api/alias': Alias(),
+        '/api/msgs': Msgs()
+    }
+    expose(routes)
+    cherrypy.tree.mount(Socket(), '/', config={'/ws': {'tools.websocket.on': True, 'tools.websocket.handler_cls': WSocket}})
+
     cherrypy.engine.start()
     cherrypy.engine.block()
