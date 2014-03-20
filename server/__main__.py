@@ -1,6 +1,4 @@
 import cherrypy
-from ws4py.server.cherrypyserver import WebSocketPlugin, WebSocketTool
-from ws4py.websocket import WebSocket
 
 import names
 
@@ -27,34 +25,41 @@ class Alias:
 
         return {'alias': available_alias(pubkey)}
 
+import time
+import json
+from cherrypy import tools
+
+listening = dict()
+
+def pa(hashed_pubkey, res):
+    time.sleep(2)
+    msgs = db.get(hashed_pubkey)
+    res.headers['Content-Type'] = 'application/json'
+    yield json.dumps({'msgs': []}).encode()
+
 class Msgs:
 
-    @cherrypy.tools.json_out()
+    #@cherrypy.tools.json_out()
     def GET(self, hashed_pubkey):
 
         msgs = db.get(hashed_pubkey)
+        if (len(msgs) > 0):
+            cherrypy.response.headers['Content-Type'] = 'application/json'
+            return json.dumps({'msgs': msgs}).encode()
+        else:
+            return pa(hashed_pubkey, cherrypy.response)
 
-        return {'msgs': msgs}
+    GET._cp_config = {'response.stream': True}
 
     @cherrypy.tools.json_out()
     def POST(self, hashed_pubkey, encrypted_key, encrypted_msg, signature):
 
         msg_id = db.post(hashed_pubkey, encrypted_key, encrypted_msg, signature)
 
+        if hashed_pubkey in listening.keys():
+            print('wWAAA')
+
         return {'id': str(msg_id)}
-
-class WSocket(WebSocket):
-
-    def received_message(self, message):
-        self.send(message.data, message.is_binary)
-
-class Socket(object):
-
-    @cherrypy.expose
-    def ws(self):
-        '''handler = cherrypy.request.ws_handler
-        print(handler)'''
-        pass
 
 def available_alias(pubkey):
 
@@ -81,11 +86,12 @@ if __name__ == '__main__':
 
         'server.ssl_module': 'builtin',
         'server.ssl_certificate': 'certs/cert.pem',
-        'server.ssl_private_key': 'certs/privkey.pem'
+        'server.ssl_private_key': 'certs/privkey.pem',
+
+        'tools.encode.on': True,
+        'tools.encode.encoding': 'utf-8'
     }
     cherrypy.config.update(server_config)
-    WebSocketPlugin(cherrypy.engine).subscribe()
-    cherrypy.tools.websocket = WebSocketTool()
 
     routes = {
         '/': Home(),
@@ -93,7 +99,6 @@ if __name__ == '__main__':
         '/api/msgs': Msgs()
     }
     expose(routes)
-    cherrypy.tree.mount(Socket(), '/', config={'/ws': {'tools.websocket.on': True, 'tools.websocket.handler_cls': WSocket}})
 
     cherrypy.engine.start()
     cherrypy.engine.block()

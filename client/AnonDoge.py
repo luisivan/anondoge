@@ -1,8 +1,7 @@
 import requests
+from base64 import b64encode, b64decode
 
 import Crypt
-
-from base64 import b64encode, b64decode
 
 class AnonDoge:
 
@@ -61,11 +60,17 @@ class AnonDoge:
         self.hashed_pubkey = Crypt.sha256(newpubkey)
         self.privkey = newprivkey
 
+        #self.fetch()
+
         return r.json()
 
     def fetch(self):
 
         r = requests.get(AnonDoge.server + '/api/msgs', params = { 'hashed_pubkey': self.hashed_pubkey }, verify=False)
+
+        print(r.text)
+        print(r.json())
+        print(r)
 
         msgs = r.json()['msgs']
 
@@ -82,7 +87,3 @@ class AnonDoge:
             #    return 'Incorrect decryption'
 
         return arr
-
-            
-
-            

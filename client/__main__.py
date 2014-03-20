@@ -11,6 +11,8 @@ class AnonDogeShell(Cmd):
     intro = 'Welcome to AnonDoge. Type help or ? to list commands\n'
     prompt = '(doge) '
 
+    #doge.fetch()
+
     def do_alias(self, arg):
 
         args = parse(arg)
@@ -78,4 +80,8 @@ def parse(arg):
     return shlex.split(arg)
 
 if __name__ == '__main__':
-    AnonDogeShell().cmdloop()
+    try:
+        AnonDogeShell().cmdloop()
+    except KeyboardInterrupt:
+        print('\n\nGoodbye!')
+        exit()
