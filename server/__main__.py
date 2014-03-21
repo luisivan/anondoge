@@ -9,7 +9,7 @@ class Home:
     @cherrypy.tools.json_out()
     def GET(self):
 
-        return {'you': 'modafoca'}
+        return {'anon': 'doge'}
 
 class Alias:
 
