@@ -1,10 +1,11 @@
 import requests
 
 import Crypt
+import config
 
 class AnonDoge:
 
-    server = 'https://localhost:8443'
+    server = config.server
 
     def __init__(self):
         try:

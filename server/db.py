@@ -1,11 +1,19 @@
 from pymongo import MongoClient
 
-client = MongoClient('mongodb://doge:doge@oceanic.mongohq.com:10033/AnonDoge')
+import config
+
+client = MongoClient(config.database)
 
 db = client['AnonDoge']
 
 msgs = db.msgs
 aliases = db.aliases
+
+def get_one():
+
+	msg = msgs.find_one()
+	del msg['_id']
+	return msg
 
 def get_alias(alias):
 

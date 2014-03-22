@@ -1,3 +1,5 @@
+import os
+import json
 import cherrypy
 
 import names
@@ -6,10 +8,9 @@ import db
 
 class Home:
 
-    @cherrypy.tools.json_out()
     def GET(self):
 
-        return {'anon': 'doge'}
+        return open('static/index.html').read().replace('{{content}}', json.dumps(db.get_one(), sort_keys=True, indent=4))
 
 class Alias:
 
@@ -56,6 +57,15 @@ def expose(routes):
             theclass, path, {'/': {'request.dispatch': cherrypy.dispatch.MethodDispatcher()} }
         )
 
+    cherrypy.tree.mount(None, '/static', {
+        '/': {
+            'tools.staticdir.on': True,
+            'tools.staticdir.dir': 'static'
+        },
+    })
+
+current_dir = os.path.dirname(os.path.abspath(__file__)) 
+
 if __name__ == '__main__':
 
     server_config = {
@@ -67,7 +77,13 @@ if __name__ == '__main__':
         'server.ssl_private_key': 'certs/privkey.pem',
 
         'tools.encode.on': True,
-        'tools.encode.encoding': 'utf-8'
+        'tools.encode.encoding': 'utf-8',
+
+        'tools.staticdir.root': current_dir,
+        'static': {
+          'tools.staticdir.on': True,
+          'tools.staticdir.dir': 'static'
+        }
     }
     cherrypy.config.update(server_config)
 
