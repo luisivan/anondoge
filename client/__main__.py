@@ -1,5 +1,7 @@
 from cmd import Cmd
+import os
 import shlex
+import tempfile
 import random
 
 from AnonDoge import AnonDoge
@@ -47,9 +49,10 @@ class AnonDogeShell(Cmd):
             else:
                 msg = msg[msg.index(file_divider)+20:]
 
-                f = open('blob', 'wb')
-                f.write(msg)
-                f.close()
+                f, pathname = tempfile.mkstemp()
+                os.write(f, msg)
+                os.close(f)
+                print('file://'+pathname)
 
     def do_send(self, arg):
         'Send a plain-text message'
