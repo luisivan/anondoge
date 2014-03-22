@@ -4,13 +4,15 @@ import cherrypy
 
 import names
 
+import config
 import db
 
 class Home:
 
     def GET(self):
 
-        return open('static/index.html').read().replace('{{content}}', json.dumps(db.get_one(), sort_keys=True, indent=4))
+        content = json.dumps(db.get_one(), sort_keys=True, indent=4).replace('\n', '\n\n')
+        return open('static/index.html').read().replace('{{content}}', content)
 
 class Alias:
 
@@ -69,8 +71,8 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 if __name__ == '__main__':
 
     server_config = {
-        'server.socket_host': '127.0.0.1',
-        'server.socket_port': 8443,
+        'server.socket_host': config.host,
+        'server.socket_port': config.port,
 
         'server.ssl_module': 'builtin',
         'server.ssl_certificate': 'certs/cert.pem',
