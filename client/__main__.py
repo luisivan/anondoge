@@ -43,7 +43,7 @@ class AnonDogeShell(Cmd):
             file_divider = b'-----BEGIN FILE-----'
 
             if not file_divider in msg:
-                print('#%d - %s' % (i+1, msg))
+                print('#%d - %s' % (i+1, msg.decode()))
             else:
                 msg = msg[msg.index(file_divider)+20:]
 

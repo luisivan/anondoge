@@ -60,30 +60,22 @@ class AnonDoge:
         self.hashed_pubkey = Crypt.sha256(newpubkey)
         self.privkey = newprivkey
 
-        #self.fetch()
-
         return r.json()
 
     def fetch(self):
 
         r = requests.get(AnonDoge.server + '/api/msgs', params = { 'hashed_pubkey': self.hashed_pubkey }, verify=False)
 
-        print(r.text)
-        print(r.json())
-        print(r)
-
         msgs = r.json()['msgs']
 
         arr = list()
         for msg in msgs:
-            #try:
-            msg, newpubkey = Crypt.decrypt(self.privkey, msg)
-            arr.append(msg)
-            # todo: dont overwrite (in same session)
-            #self.save_msg(msg)
-            self.set_receiver(newpubkey)
+            try:
+                msg, newpubkey = Crypt.decrypt(self.privkey, msg)
+                arr.append(msg)
+                self.set_receiver(newpubkey)
 
-            #except:
-            #    return 'Incorrect decryption'
+            except:
+                return 'Incorrect decryption'
 
         return arr

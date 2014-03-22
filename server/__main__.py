@@ -25,40 +25,18 @@ class Alias:
 
         return {'alias': available_alias(pubkey)}
 
-import time
-import json
-from cherrypy import tools
-
-listening = dict()
-
-def pa(hashed_pubkey, res):
-    time.sleep(2)
-    msgs = db.get(hashed_pubkey)
-    res.headers['Content-Type'] = 'application/json'
-    yield json.dumps({'msgs': []}).encode()
-
 class Msgs:
 
-    #@cherrypy.tools.json_out()
+    @cherrypy.tools.json_out()
     def GET(self, hashed_pubkey):
 
         msgs = db.get(hashed_pubkey)
-        if (len(msgs) > 0):
-            cherrypy.response.headers['Content-Type'] = 'application/json'
-            return json.dumps({'msgs': msgs}).encode()
-        else:
-            return pa(hashed_pubkey, cherrypy.response)
-
-    GET._cp_config = {'response.stream': True}
+        return {'msgs': msgs}
 
     @cherrypy.tools.json_out()
     def POST(self, hashed_pubkey, encrypted_key, encrypted_msg, signature):
 
         msg_id = db.post(hashed_pubkey, encrypted_key, encrypted_msg, signature)
-
-        if hashed_pubkey in listening.keys():
-            print('wWAAA')
-
         return {'id': str(msg_id)}
 
 def available_alias(pubkey):
