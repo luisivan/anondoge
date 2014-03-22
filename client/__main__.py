@@ -1,9 +1,8 @@
 from cmd import Cmd
 import shlex
+import random
 
 from AnonDoge import AnonDoge
-
-from base64 import b64encode, b64decode
 
 doge = AnonDoge()
 
@@ -11,9 +10,8 @@ class AnonDogeShell(Cmd):
     intro = 'Welcome to AnonDoge. Type help or ? to list commands\n'
     prompt = '(doge) '
 
-    #doge.fetch()
-
     def do_alias(self, arg):
+        'Get a new alias for you or set your receiver to an alias'
 
         args = parse(arg)
         if len(args):
@@ -28,10 +26,12 @@ class AnonDogeShell(Cmd):
             print('Your alias is %s' % doge.get_alias())
 
     def do_key(self, arg):
+        'Print your public key'
 
         print(doge.pubkey.decode())
 
     def do_fetch(self, arg):
+        'Fetch all the messages sent to you'
 
         msgs = doge.fetch()
         n = len(msgs)
@@ -52,6 +52,7 @@ class AnonDogeShell(Cmd):
                 f.close()
 
     def do_send(self, arg):
+        'Send a plain-text message'
 
         args = parse(arg)
         if len(args):
@@ -63,6 +64,7 @@ class AnonDogeShell(Cmd):
             print('Message sent')
 
     def do_sendfile(self, arg):
+        'Send a file from your filesystem'
 
         args = parse(arg)
         f = args[0]
@@ -73,14 +75,20 @@ class AnonDogeShell(Cmd):
 
     def do_bye(self, arg):
         'Close AnonDoge'
+
         print('Thank you for using AnonDoge')
         return True
+
+    def emptyline(self):
+        doge = ['such command line', 'much crypto', 'very secure', 'much hacker', 'so fuck NSA', 'wow freedom', 'many messages', 'such communication', 'many keys']
+        print(random.choice(doge))
 
 def parse(arg):
     return shlex.split(arg)
 
 if __name__ == '__main__':
     try:
+        AnonDogeShell().precmd('fetch')
         AnonDogeShell().cmdloop()
     except KeyboardInterrupt:
         print('\n\nGoodbye!')
