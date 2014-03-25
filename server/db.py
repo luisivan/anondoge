@@ -13,7 +13,7 @@ def get_one():
 
 	msg = msgs.find_one()
 	if not msg:
-        msg = {'msg': 'Any message up here'}
+		msg = {'msg': 'Any message up here'}
 	else:
 		del msg['_id']
 	return msg
