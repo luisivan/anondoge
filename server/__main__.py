@@ -11,10 +11,6 @@ class Home:
 
     def GET(self):
 
-        msg = db.get_one()
-        if not msg:
-            msg = {'msg': 'Any message up here'}
-
         content = json.dumps(db.get_one(), sort_keys=True, indent=4).replace('\n', '\n\n')
         return open('static/index.html').read().replace('{{content}}', content)
 

@@ -12,7 +12,10 @@ aliases = db.aliases
 def get_one():
 
 	msg = msgs.find_one()
-	del msg['_id']
+	if not msg:
+        msg = {'msg': 'Any message up here'}
+	else:
+		del msg['_id']
 	return msg
 
 def get_alias(alias):
