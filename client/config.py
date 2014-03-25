@@ -1,1 +1,1 @@
-server = 'https://localhost:8443'
+server = 'https://130.206.83.103'
