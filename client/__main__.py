@@ -12,6 +12,22 @@ class AnonDogeShell(Cmd):
     intro = 'Welcome to AnonDoge. Type help or ? to list commands\n'
     prompt = '(doge) '
 
+    def do_image(self, arg):
+        'Create an image with your pubkey or get someone pubkey by an image'
+
+        args = parse(arg)
+        if len(args):
+            f = args[0]
+            pubkey = doge.decode_img(f)
+            if pubkey:
+                doge.set_receiver(pubkey)
+                print('Pubkey successfully imported')
+            else:
+                print('Failed to import pubkey from image')
+        else:
+            doge.encode_img(doge.pubkey.decode())
+            print('Pubkey successfully exported')
+
     def do_alias(self, arg):
         'Get a new alias for you or set your receiver to an alias'
 

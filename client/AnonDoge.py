@@ -1,4 +1,8 @@
 import requests
+from PIL import Image
+import stepic
+
+from base64 import b64encode, b64decode
 
 import Crypt
 import config
@@ -32,6 +36,21 @@ class AnonDoge:
         f = open('received.txt', 'w')
         f.write(msg)
         f.close()
+
+    def encode_img(self, data):
+
+        im = Image.open('/home/li/dev/anondoge/client/img/01.jpg')
+        img = stepic.encode(im, data)
+        img.save('doge.png', 'PNG')
+
+    def decode_img(self, file):
+
+        im = Image.open(file)
+        data = stepic.decode(im)
+        if '-----BEGIN PUBLIC KEY-----' in data:
+            return data
+        else:
+            return False
 
     def get_alias(self):
 
